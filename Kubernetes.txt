@@ -1,0 +1,215 @@
+1. Kubernetes
+What is Kubernetes?
+Kubernetes (often abbreviated as K8s) is an open-source container orchestration platform. It automates the deployment, scaling, and management of containerized applications across a cluster of machines (Nodes).
+Key Features of Kubernetes
+Container Orchestration: Automates container deployment, scaling, and management.
+Self-Healing: Automatically restarts failed containers, replaces them, and reschedules Pods.
+Load Balancing: Distributes traffic across multiple containers.
+Scaling: Automatically scales applications based on resource usage or traffic.
+Service Discovery: Provides DNS names and IPs to containers for communication.
+Rolling Updates: Enables seamless updates to applications without downtime.
+Components of Kubernetes
+Master Node (Control Plane):
+
+Manages the cluster and schedules workloads.
+Key components:
+API Server: Handles communication with users and other tools.
+Scheduler: Schedules Pods on Nodes.
+Controller Manager: Ensures the desired state of resources.
+etcd: Stores cluster data and configurations.
+Worker Nodes:
+
+Run the application workloads (Pods).
+Key components:
+kubelet: Communicates with the Control Plane and manages Pods.
+Container Runtime: Runs containers (e.g., Docker, containerd).
+kube-proxy: Handles networking between Pods and Services.
+
+######################################################################################################################################################################################################################
+2. Docker
+What is Docker?
+Docker is a containerization platform that allows developers to package applications with their dependencies into lightweight, portable containers.
+
+Key Features of Docker
+Image Creation: Packages applications into container images.
+Portability: Containers can run on any system with Docker installed.
+Isolation: Each container runs independently in a secure, isolated environment.
+Efficiency: Containers share the host OS kernel, making them lightweight.
+Docker Workflow
+Build: Create a container image using a Dockerfile.
+Ship: Push the image to a container registry (e.g., Docker Hub).
+Run: Deploy and run containers from the image.
+Docker vs Virtual Machines
+Feature	Docker Containers	Virtual Machines
+Startup Time	Seconds	Minutes
+Size	MBs (lightweight)	GBs (heavy)
+Isolation	Shares host OS kernel	Full OS in each VM
+Portability	Highly portable	Limited portability
+
+
+######################################################################################################################################################################################################################
+
+3. Pods
+What is a Pod?
+A Pod is the smallest deployable unit in Kubernetes.
+A Pod wraps one or more containers that share:
+Networking: Each Pod gets a unique IP address.
+Storage: Containers can share volumes.
+Lifecycle: Containers in a Pod are managed together.
+Key Points about Pods
+Single Container Pods: Common scenario where one container runs in a Pod.
+Multi-Container Pods: When multiple containers need to work together (e.g., a web server container and a logging container).
+Ephemeral: Pods are designed to be temporary. Kubernetes replaces them if needed.
+Example of a Pod (YAML)
+----------------------------------------------------------------------------------
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: nginx
+    ports:
+    - containerPort: 80
+----------------------------------------------------------------------------------
+######################################################################################################################################################################################################################
+4. Nodes
+What is a Node?
+A Node is a worker machine (physical or virtual) in a Kubernetes cluster.
+Each Node runs the containers in Pods and communicates with the Control Plane.
+Key Components of a Node
+kubelet: Ensures containers in Pods are running and communicates with the API Server.
+Container Runtime: Runs containers (e.g., Docker, containerd).
+kube-proxy: Manages networking and ensures Pods can communicate.
+Types of Nodes
+Master Node: Manages the cluster and schedules Pods on worker nodes.
+Worker Node: Runs application Pods.
+
+
+
+######################################################################################################################################################################################################################
+
+5. Applications
+What is an Application in this Context?
+An application is the business logic/code (e.g., web server, database, microservices) that runs inside containers.
+Kubernetes ensures the application is deployed, scaled, and accessible.
+
+######################################################################################################################################################################################################################
+
+Example Workflow for an Application
+Developer’s Code: A Python Flask app is written.
+Containerization: Docker packages the app into a container image.
+Deployment: Kubernetes deploys the container as Pods on Nodes.
+Scaling: Kubernetes automatically scales Pods based on demand.
+Access: Kubernetes exposes the app via a Service or Ingress.
+
+
+######################################################################################################################################################################################################################
+How Everything Works Together (End-to-End Example)
+Developer Builds a Flask Application:
+
+Python Flask app that displays "Hello, Kubernetes!".
+The app and its dependencies are defined in a Dockerfile.
+Docker Creates a Container Image:
+
+The Dockerfile:
+dockerfile
+----------------------------------------------------------------------------------
+FROM python:3.9
+WORKDIR /app
+COPY . /app
+RUN pip install flask
+CMD ["python", "app.py"]
+----------------------------------------------------------------------------------
+Use docker build -t flask-app:latest . to create the image.
+Push the image to Docker Hub: docker push flask-app:latest.
+Kubernetes Deploys the Application:
+
+Create a Deployment YAML:
+----------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app-container
+        image: flask-app:latest
+        ports:
+        - containerPort: 5000
+----------------------------------------------------------------------------------
+Deploy the application using kubectl apply -f deployment.yaml.
+Kubernetes Creates Pods:
+
+Kubernetes schedules 3 Pods on Nodes.
+Each Pod runs a container from the flask-app:latest image.
+Service Exposes the Application:
+
+Create a Service YAML:
+----------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: LoadBalancer
+----------------------------------------------------------------------------------
+Apply the service with kubectl apply -f service.yaml.
+End-User Access:
+
+Users access the app via the LoadBalancer’s IP or DNS name.
+Diagrams
+Kubernetes Architecture:
+
+
++-------------------------+               +------------------+
+|    Control Plane        |               | Worker Node      |
+|  - API Server           |   Schedules   |  - kubelet       |
+|  - Scheduler            |-------------> |  - kube-proxy    |
+|  - etcd (Cluster Data)  |               |  - Pods/Containers|
++-------------------------+               +------------------+
+Pod and Container Relationship:
+
+
++---------Pod----------+
+| +---Container----+   |
+| | App + Runtime   |   |
+| +-----------------+   |
++-----------------------+
+Workflow:
+
+Developer --> Docker --> Kubernetes --> Pods --> Users
+
+
+
+
+######################################################################################################################################################################################################################
+
+Key Takeaways
+Docker:
+Builds container images and acts as a runtime for containers.
+Kubernetes:
+Manages and orchestrates containers at scale.
+Pods:
+The smallest deployable unit in Kubernetes.
+Nodes:
+Machines that run Pods/containers.
+Applications:
+Code running inside containers to provide functionality.
+This architecture ensures high availability, scalability, and portability of modern applications.
